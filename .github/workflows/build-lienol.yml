@@ -1,0 +1,123 @@
+name: Build Lienol OpenWrt
+
+on:
+  schedule:
+    - cron: 0 0 * * *
+  push:
+    branch:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - ipq40xx
+    env: 
+      REPO_URL: https://github.com/Lienol/openwrt
+      REPO_BRANCH: dev-lean-lede
+      OPENWRT_DIR: openwrt
+      LUCI_APP_CONFIG: lienol-luci-app
+
+    steps:
+    - name: Save build info
+      id: build_info
+      run: |
+        echo "##[set-output name=UTCTime;]$(date -u "+%Y-%m-%d %H:%M:%S")"
+        echo "##[set-output name=ChinaTime;]$(date -u -d"+8 hour" "+%Y-%m-%d %H:%M:%S")"
+        echo "##[set-output name=Url;]$(echo $REPO_URL)"
+        echo "##[set-output name=Branch;]$(echo $REPO_BRANCH)"
+
+    - name: Checkout Config Source
+      uses: actions/checkout@v1
+
+    - name: Initialization environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+          sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d
+          sudo -E apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* mysql* php*
+          sudo -E apt-get -qq update
+          sudo -E apt-get -qq install build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs gcc-multilib g++-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint device-tree-compiler
+          sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+          sudo -E apt-get -y autoremove --purge
+          sudo -E apt-get clean
+          df -h
+
+    - name: Clone source code        
+      run: git clone --depth 1 $REPO_URL -b $REPO_BRANCH $OPENWRT_DIR
+
+    - name: Update Feeds
+      run: cd $OPENWRT_DIR && ./scripts/feeds update -a
+
+    - name: Install Feeds
+      run: cd $OPENWRT_DIR && ./scripts/feeds install -a
+
+    - name: Costom configure file
+      run: |
+          [ -e ${{ matrix.target }}.config ] && cat ${{ matrix.target }}.config >> $OPENWRT_DIR/.config
+          [ -e $LUCI_APP_CONFIG.config ] && cat $LUCI_APP_CONFIG.config >> $OPENWRT_DIR/.config
+
+    - name: Load defconfig
+      run: |
+          cd $OPENWRT_DIR
+          make defconfig
+
+    - name: Make download
+      run: |
+        cd $OPENWRT_DIR
+        make download -j8
+        find dl -size -1024c -exec ls -l {} \;
+        find dl -size -1024c -exec rm -f {} \;
+
+    - name: Compile firmware
+      run: |
+        cd $OPENWRT_DIR
+        make -j$(nproc) || make -j1 V=s
+        echo "======================="
+        echo "Space usage:"
+        echo "======================="
+        df -h
+        echo "======================="
+        du -h --max-depth=1 ./ --exclude=build_dir --exclude=bin
+        du -h --max-depth=1 ./build_dir
+        du -h --max-depth=1 ./bin
+
+    - name: Assemble artifact
+      run: |
+          rm -rf ./artifact/
+          mkdir -p ./artifact/
+          find $OPENWRT_DIR/bin/targets/ -name "*sysupgrade*bin*" | xargs -i mv -f {} ./artifact/
+          find $OPENWRT_DIR/bin/targets/ -name "*combined*img*" | xargs -i mv -f {} ./artifact/
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@master
+      with:
+        name: ${{ matrix.target }}
+        path: ./artifact/
+
+    - name: Find acrh17 file
+      id: find_acrh17_file
+      run: echo "##[set-output name=filePath;]$(find ./artifact -name "*acrh17*bin*")"
+
+    - name: Send telegram message
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO_ACRH17_PASSWALL_CHANNEL }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        document: ${{  steps.find_acrh17_file.outputs.filePath }}
+        message: |
+          RT_ACRH17 Daily Build
+          编译时间：
+          UTC时间：${{ steps.build_info.outputs.UTCTime }}
+          中国时间：${{ steps.build_info.outputs.ChinaTime }}
+          编译源码：${{ steps.build_info.outputs.Url }}
+          编译分支：${{ steps.build_info.outputs.BRANCH }}
+          必有软件：
+            *passwall
+            *ipv6helper
+          其他软件取默认设置，本编译不对任何默认设置进行变更，只添加比较软件后进行源码编译，有问题请到编码仓库下提交issue
+          有需求添加其他软件，@Rurigb 进行留言
+          文件下载：
+          ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
