@@ -40,6 +40,12 @@ jobs:
     - name: Clone source code        
       run: git clone --depth 1 $REPO_URL -b $REPO_BRANCH $OPENWRT_DIR
 
+    - name: Add Adguard Home Source
+      run: |
+        cd $OPENWRT_DIR
+        cd package/lean/
+        git clone --depth 1 https://github.com/rufengsuixing/luci-app-adguardhome -b master luci-app-adguardhome
+
     - name: Update Feeds
       run: cd $OPENWRT_DIR && ./scripts/feeds update -a
 
