@@ -2,7 +2,7 @@ name: Build Lienol OpenWrt
 
 on:
   schedule:
-    - cron: 0 0 * * *
+    - cron: 0 20 * * 5
   push:
     branch:
       - master
@@ -14,7 +14,7 @@ jobs:
       matrix:
         target:
           - ipq40xx
-    env: 
+    env:
       REPO_URL: https://github.com/Lienol/openwrt
       REPO_BRANCH: dev-lean-lede
       OPENWRT_DIR: openwrt
@@ -45,7 +45,7 @@ jobs:
           sudo -E apt-get clean
           df -h
 
-    - name: Clone source code        
+    - name: Clone source code
       run: git clone --depth 1 $REPO_URL -b $REPO_BRANCH $OPENWRT_DIR
 
     - name: Update Feeds
