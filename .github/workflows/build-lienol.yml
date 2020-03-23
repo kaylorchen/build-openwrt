@@ -108,7 +108,7 @@ jobs:
         token: ${{ secrets.TELEGRAM_TOKEN }}
         document: ${{  steps.find_acrh17_file.outputs.filePath }}
         message: |
-          RT_ACRH17 Daily Build
+          RT_ACRH17 Weekly Build (每周编译版本)
           编译时间：
           UTC时间：${{ steps.build_info.outputs.UTCTime }}
           中国时间：${{ steps.build_info.outputs.ChinaTime }}
