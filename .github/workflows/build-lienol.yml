@@ -16,7 +16,7 @@ jobs:
           - ipq40xx
     env:
       REPO_URL: https://github.com/Lienol/openwrt
-      REPO_BRANCH: dev-19.07
+      REPO_BRANCH: 19.07
       OPENWRT_DIR: openwrt
       LUCI_APP_CONFIG: lienol-luci-app
 
