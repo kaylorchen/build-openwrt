@@ -108,7 +108,7 @@ jobs:
       run: echo "##[set-output name=filePath;]$(find ./artifact -name "*acrh17*bin*")"
 
     - name: Send telegram message
-      uses: appleboy/telegram-action@master
+      uses: appleboy/telegram-action@v0.1.0
       with:
         to: ${{ secrets.TELEGRAM_TO_ACRH17_PASSWALL_CHANNEL }}
         token: ${{ secrets.TELEGRAM_TOKEN }}
