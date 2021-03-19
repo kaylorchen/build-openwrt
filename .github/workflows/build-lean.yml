@@ -89,6 +89,7 @@ jobs:
         du -h --max-depth=1 ./ --exclude=build_dir --exclude=bin
         du -h --max-depth=1 ./build_dir
         du -h --max-depth=1 ./bin
+        ls -la ./bin
 
     - name: Assemble artifact
       run: |
@@ -102,7 +103,3 @@ jobs:
       with:
         name: ${{ matrix.target }}
         path: ./artifact/
-
-    - name: Find acrh17 file
-      id: find_acrh17_file
-      run: echo "##[set-output name=filePath;]$(find ./artifact -name "*acrh17*bin*")"
