@@ -1,4 +1,4 @@
-name: Build Lienol OpenWrt
+name: Build OpenWrt K3
 
 on:
   push:
