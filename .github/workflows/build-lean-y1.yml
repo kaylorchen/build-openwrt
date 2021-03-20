@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         target:
-          - lenovo-y1
+          - lenovo-y1-for-lean
     env:
       REPO_URL: https://github.com/coolsnowwolf/lede
       REPO_BRANCH: master
