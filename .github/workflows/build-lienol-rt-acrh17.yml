@@ -1,4 +1,4 @@
-name: Build Lienol OpenWrt
+name: Build Lienol OpenWrt ACRH17
 
 on:
   # push:

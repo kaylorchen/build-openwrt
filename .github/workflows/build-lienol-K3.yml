@@ -1,9 +1,6 @@
-name: Build OpenWrt Lenovo Y1
+name: Build Lienol OpenWrt K3
 
 on:
-#   push:
-#     branches:
-#     - master
   schedule:
     - cron: 0 20 * * 5
 
@@ -13,7 +10,7 @@ jobs:
     strategy:
       matrix:
         target:
-          - lenovo-y1
+          - bcm53xx
     env:
       REPO_URL: https://github.com/Lienol/openwrt
       REPO_BRANCH: 19.07
