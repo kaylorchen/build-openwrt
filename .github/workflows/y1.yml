@@ -1,6 +1,6 @@
 name: Build OpenWrt Lenovo Y1
 
-# on:
+on:
 #   push:
 #     branches:
 #     - master
