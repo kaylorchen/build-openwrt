@@ -18,7 +18,7 @@ jobs:
       REPO_URL: https://github.com/coolsnowwolf/lede
       REPO_BRANCH: master
       OPENWRT_DIR: openwrt
-      LUCI_APP_CONFIG: lean-luci-app
+      LUCI_APP_CONFIG: lean-luci-app-y1
 
     steps:
     - name: Save build info
