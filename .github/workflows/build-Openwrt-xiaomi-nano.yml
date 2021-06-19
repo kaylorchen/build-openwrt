@@ -1,4 +1,4 @@
-name: Build Lean OpenWrt for BL-M7628NA2
+name: Build Lean OpenWrt for Xiaomi nano
 
 on:
   push:
