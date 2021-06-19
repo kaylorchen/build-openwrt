@@ -1,11 +1,9 @@
-name: Build Lienol OpenWrt ACRH17
+name: Build Lean OpenWrt for BL-M7628NA2
 
 on:
-  # push:
-  #   branches:
-  #   - master
-  schedule:
-    - cron: 0 20 * * 5
+  push:
+    branches:
+    - master
 
 jobs:
   build:
@@ -13,12 +11,11 @@ jobs:
     strategy:
       matrix:
         target:
-          - ipq40xx
+          - xiaomi-nano
     env:
-      REPO_URL: https://github.com/Lienol/openwrt
-      REPO_BRANCH: 19.07
+      REPO_URL: https://github.com/openwrt/openwrt.git
+      REPO_BRANCH: v21.02.0-rc3
       OPENWRT_DIR: openwrt
-      LUCI_APP_CONFIG: lienol-luci-app
 
     steps:
     - name: Save build info
@@ -28,7 +25,6 @@ jobs:
         echo "##[set-output name=ChinaTime;]$(date -u -d"+8 hour" "+%Y-%m-%d %H:%M:%S")"
         echo "##[set-output name=Url;]$(echo $REPO_URL)"
         echo "##[set-output name=Branch;]$(echo $REPO_BRANCH)"
-
     - name: Checkout Config Source
       uses: actions/checkout@v1
 
@@ -36,15 +32,14 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-          sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d
-          sudo -E apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* mysql* php*
-          sudo -E apt-get -qq update
-          sudo -E apt-get -y install build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch python3.5 python2.7 unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs git-core gcc-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint device-tree-compiler g++-multilib antlr3 gperf
-          sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-          sudo -E apt-get -y autoremove --purge
-          sudo -E apt-get clean
-          df -h
-
+        docker rmi `docker images -q`
+        sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d
+        sudo -E apt-get -y purge azure-cli ghc* zulu* hhvm llvm* firefox google* dotnet* powershell openjdk* mysql* php*
+        sudo -E apt-get update
+        sudo -E apt-get -y install build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch python3 unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs gcc-multilib g++-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint device-tree-compiler antlr3 gperf wget swig rsync
+        sudo -E apt-get -y autoremove --purge
+        sudo -E apt-get clean
+        df -h
     - name: Clone source code
       run: git clone --depth 1 $REPO_URL -b $REPO_BRANCH $OPENWRT_DIR
 
@@ -53,16 +48,18 @@ jobs:
 
     - name: Install Feeds
       run: cd $OPENWRT_DIR && ./scripts/feeds install -a
-
+      
     - name: Costom configure file
       run: |
           [ -e ${{ matrix.target }}.config ] && cat ${{ matrix.target }}.config >> $OPENWRT_DIR/.config
-          [ -e $LUCI_APP_CONFIG.config ] && cat $LUCI_APP_CONFIG.config >> $OPENWRT_DIR/.config
 
     - name: Load defconfig
       run: |
           cd $OPENWRT_DIR
           make defconfig
+
+    - name: Print Config
+      run: cat $OPENWRT_DIR/.config && cd $OPENWRT_DIR && grep -rn 7628 .config
 
     - name: Make download
       run: |
@@ -70,7 +67,7 @@ jobs:
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
-
+        
     - name: Compile firmware
       run: |
         cd $OPENWRT_DIR
@@ -91,9 +88,15 @@ jobs:
           mkdir -p ./artifact/
           find $OPENWRT_DIR/bin/targets/ -name "*sysupgrade*bin*" | xargs -i mv -f {} ./artifact/
           find $OPENWRT_DIR/bin/targets/ -name "*combined*img*" | xargs -i mv -f {} ./artifact/
+          find $OPENWRT_DIR/bin/targets/ -name "*efi*img*" | xargs -i mv -f {} ./artifact/
+          find $OPENWRT_DIR/bin/targets/ -name "*trx*" | xargs -i mv -f {} ./artifact/
+          find $OPENWRT_DIR/bin/targets/ -name "*tar.gz*" | xargs -i mv -f {} ./artifact/
+          find $OPENWRT_DIR/bin/targets/ -name "*psg*" | xargs -i mv -f {} ./artifact/
+          find $OPENWRT_DIR/bin/targets/ -name "*vmdk*" | xargs -i mv -f {} ./artifact/
+          find $OPENWRT_DIR/bin/targets/ -name "*psg*" | xargs -i mv -f {} ./artifact/
 
     - name: Upload artifact
-      uses: actions/upload-artifact@master
+      uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.target }}
         path: ./artifact/
