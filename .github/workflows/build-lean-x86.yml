@@ -33,7 +33,7 @@ jobs:
       uses: actions/checkout@v1
 
     - name: Clone source code
-      run: git clone --depth 1 $REPO_URL -b $REPO_BRANCH $OPENWRT_DIR && cd $OPENWRT_DIR && ls -l && git show fb93cd27955f1ab6a35df6063697b878d8954268 && git reset --hard fb93cd27955f1ab6a35df6063697b878d8954268
+      run: git clone $REPO_URL -b $REPO_BRANCH $OPENWRT_DIR && cd $OPENWRT_DIR && ls -l && git reset --hard fb93cd27955f1ab6a35df6063697b878d8954268
 
     - name: Initialization environment
       env:
