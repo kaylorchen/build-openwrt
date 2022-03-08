@@ -46,7 +46,7 @@ jobs:
         df -h
 
     - name: Clone source code
-      run: git clone --depth 1 $REPO_URL -b $REPO_BRANCH $OPENWRT_DIR
+      run: git clone --depth 1 $REPO_URL -b $REPO_BRANCH $OPENWRT_DIR && cd $OPENWRT_DIR && git checkout fb93cd2795
 
     - name: Update Feed Config
       run: cd $OPENWRT_DIR && sed -i 's/#src-git helloworld/src-git helloworld/g' ./feeds.conf.default
