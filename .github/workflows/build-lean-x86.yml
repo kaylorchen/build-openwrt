@@ -33,7 +33,7 @@ jobs:
       uses: actions/checkout@v1
 
     - name: Clone source code
-      run: git clone $REPO_URL -b $REPO_BRANCH $OPENWRT_DIR && cd $OPENWRT_DIR && ls -l && git reset --hard fb93cd27955f1ab6a35df6063697b878d8954268
+      run: git clone $REPO_URL -b $REPO_BRANCH $OPENWRT_DIR
 
     - name: Initialization environment
       env:
@@ -50,7 +50,7 @@ jobs:
 
 
     - name: Update Feed Config
-      run: cd $OPENWRT_DIR && sed -i 's/#src-git helloworld/src-git helloworld/g' ./feeds.conf.default
+      run: cd $OPENWRT_DIR && sed -i "/helloworld/d" "feeds.conf.default" && echo "src-git helloworld https://github.com/fw876/helloworld.git" >> "feeds.conf.default"
 
     - name: Update Feeds
       run: cd $OPENWRT_DIR && ./scripts/feeds update -a
@@ -81,7 +81,7 @@ jobs:
     - name: Compile firmware
       run: |
         cd $OPENWRT_DIR
-        make -j$(nproc) || make -j1 V=s
+        make -j1 V=s
         echo "======================="
         echo "Space usage:"
         echo "======================="
