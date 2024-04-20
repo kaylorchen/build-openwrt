@@ -1,4 +1,4 @@
-name: Build Lean OpenWrt for ACRH17
+name: Build Lean OpenWrt for ACRH17 Router
 
 on:
   push:
